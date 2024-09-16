@@ -1,6 +1,7 @@
 from datetime import datetime
 from bson import ObjectId
 from typing import Annotated
+from bson.errors import InvalidId
 
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
@@ -8,8 +9,9 @@ from pymongo import ReturnDocument
 from ..schemas.budget import budgetEntity, budgetsEntity
 from ..core.db import budget_collection
 from ..models.user import User
-from ..models.budget import Budget, BudgetInDB
+from ..models.budget import Budget, BudgetInDB, BudgetBreakdown, FullBudget
 from ..crud.user import get_current_user
+from ..crud.report import read_transaction_summary
 
 router = APIRouter(
     prefix="/budgets",
@@ -24,7 +26,7 @@ router = APIRouter(
 @router.get("/")
 async def read_budgets(
     user: Annotated[User, Depends(get_current_user)], startDate: datetime | None = None, endDate: datetime | None = None
-) -> list[Budget]:
+) -> list[BudgetInDB]:
     """Fetch all budgets for the current user."""
     budget_query = {"user": user.username}
     if startDate and endDate:
@@ -39,12 +41,24 @@ async def read_budgets(
 
 
 @router.get("/{id}")
-async def read_budget(id: str, user: Annotated[User, Depends(get_current_user)]) -> BudgetInDB:
+async def read_budget(id: str, user: Annotated[User, Depends(get_current_user)]) -> FullBudget:
     """Fetch a budget by ID."""
     try:
-        budget = budget_collection.find_one({"_id": ObjectId(id)})
-        return budgetEntity(budget)
-    except Exception:
+        budget = budgetEntity(budget_collection.find_one({"_id": ObjectId(id)}))
+        summary = read_transaction_summary(user.username, budget.start_date, budget.end_date)
+        print("before limit")
+
+        limit = float(budget.limit_amount,)
+        expenses = float(summary.total_expenses)
+        balance = limit - expenses
+        breakdown = BudgetBreakdown(
+            limit_amount=limit,
+            used_amount=expenses,
+            balance=balance,
+            percentage=expenses / limit * 100.0
+        )
+        return FullBudget(budget=budget, breakdown=breakdown)
+    except InvalidId:
         raise HTTPException(status_code=404, detail="Budget not found")
 
 
