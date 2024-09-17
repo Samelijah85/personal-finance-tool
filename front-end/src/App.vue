@@ -1,8 +1,6 @@
 <template>
   <div id="app">
-    <nav>
-      <router-link v-if="!isLoggedIn" to="/login">Login</router-link> |
-      <router-link v-if="!isLoggedIn" to="/register">Register</router-link> |
+    <nav v-if="isLoggedIn">
       <router-link to="/transactions">Transactions</router-link> |
       <router-link to="/budgets">Budgets</router-link> |
       <router-link to="/summary">Summary</router-link> |
@@ -38,7 +36,7 @@ export default {
       // Clear the token from localStorage and redirect to the login page
       localStorage.removeItem('token')
       this.isLoggedIn = false
-      this.$router.push('/login')
+      this.$router.push('/auth')
     }
   }
 }
