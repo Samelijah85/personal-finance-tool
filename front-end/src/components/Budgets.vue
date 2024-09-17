@@ -32,6 +32,7 @@ export default {
         this.budgets = response.data
       } catch (error) {
         console.error(error)
+        this.$router.push('/auth')
       }
     },
     async addBudget() {
