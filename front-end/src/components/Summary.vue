@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2>Transaction Summary</h2>
-    <div class="summary">
+    <div v-if="summaryFetched" class="summary">
       <div class="detail">
         <p>Total income</p>
         <p>${{ summary.total_income.toFixed(2) }}</p>
@@ -24,13 +24,15 @@ import axios from '@/axios'
 export default {
   data() {
     return {
-      summary: ''
+      summary: {},
+      summaryFetched: false
     }
   },
   async created() {
     try {
       const response = await axios.get('/reports/summary')
       this.summary = response.data
+      this.summaryFetched = true
     } catch (error) {
       console.error(error)
     }
