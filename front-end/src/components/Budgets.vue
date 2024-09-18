@@ -17,29 +17,52 @@
       </form>
     </div>
     <h3>All Budgets</h3>
-    <div>
-      <div v-for="(budget, index) in budgets" :key="index" class="all-budgets">
-        <div>
-          <div class="desc-amount">
-            <h4>{{ budget.description }}</h4>
-            <p>
-              Amount: <b>${{ budget.limit_amount.toFixed(2) }}</b>
-            </p>
-          </div>
-          <div class="period-ed">
-            <span
-              >From <i>{{ formatDate(budget.start_date) }}</i> to
-              <i>{{ formatDate(budget.end_date) }}</i></span
-            >
-            <div class="edit-delete">
-              <button @click="editButtonClicked(budget)" class="edit-button">
-                {{ isEditing && budgetId === budget.id ? 'Cancel' : 'Edit' }}
-              </button>
-              <button @click="deleteBudget(budget.id)" class="delete-button">Delete</button>
+    <div class="budget">
+      <div class="all-budgets">
+        <div v-for="(budget, index) in budgets" :key="index">
+          {{ index + 1 }}
+          <div>
+            <div @click="getFullBudget(budget.id)" class="desc-amount" role="button" tabindex="0">
+              <h4>{{ budget.description }}</h4>
+              <p>
+                Amount: <b>${{ budget.limit_amount.toFixed(2) }}</b>
+              </p>
+            </div>
+            <div class="period-ed">
+              <span
+                >From <i>{{ formatDate(budget.start_date) }}</i> to
+                <i>{{ formatDate(budget.end_date) }}</i></span
+              >
+              <div class="edit-delete">
+                <button @click="editButtonClicked(budget)" class="edit-button">
+                  {{ isEditing && budgetId === budget.id ? 'Cancel' : 'Edit' }}
+                </button>
+                <button @click="deleteBudget(budget.id)" class="delete-button">Delete</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div v-if="fullBudget.isFetched" class="budget-breakdown">
+        <h3>{{ fullBudget.budget.description }}</h3>
+        <div class="breakdown">
+          <p>Limit:</p>
+          <p>${{ fullBudget.breakdown.limit_amount.toFixed(2) }}</p>
+        </div>
+        <div class="breakdown">
+          <p>Used:</p>
+          <p>${{ fullBudget.breakdown.used_amount.toFixed(2) }}</p>
+        </div>
+        <div class="breakdown">
+          <p>Remaining:</p>
+          <p>${{ fullBudget.breakdown.balance.toFixed(2) }}</p>
+        </div>
+        <div class="breakdown">
+          <p>Usage percent:</p>
+          <p>{{ fullBudget.breakdown.percentage }}%</p>
+        </div>
+      </div>
+      <p v-else class="loading-data">{{ fullBudget.message }}</p>
     </div>
   </div>
 </template>
@@ -57,7 +80,13 @@ export default {
       endDate: '',
       amountSpent: {},
       isEditing: false,
-      budgetId: ''
+      budgetId: '',
+      fullBudget: {
+        isFetched: false,
+        message: 'No data to display',
+        breakdown: {},
+        budget: {}
+      }
     }
   },
   async created() {
@@ -120,10 +149,18 @@ export default {
       this.isEditing = false
     },
 
-    async getAmountSpent(id) {
+    async getFullBudget(id) {
+      if (id === this.fullBudget.budget.id) {
+        return
+      }
+      this.fullBudget.isFetched = false
+      this.fullBudget.message = 'Fetching details...'
       try {
         const response = await axios.get(`/budgets/${id}`)
-        this.amountSpent[id] = response.data.breakdown.used_amount
+        const budget = response.data
+        this.fullBudget.breakdown = budget.breakdown
+        this.fullBudget.budget = budget.budget
+        this.fullBudget.isFetched = true
       } catch (error) {
         console.error(error)
       }
@@ -238,7 +275,13 @@ form button:hover {
   padding: 10px;
   border: 1px solid #ddd;
   margin: 10px;
+  width: 60%;
   flex-direction: column;
+}
+
+.all-budgets div {
+  padding: 10px;
+  border: 1px solid #ddd;
 }
 
 .desc-amount,
@@ -266,5 +309,49 @@ form button:hover {
 .delete-button:hover {
   background: red;
   color: white;
+}
+
+div .budget {
+  display: flex;
+}
+
+.budget-breakdown {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 40%;
+  padding: 30px;
+}
+
+.budget-breakdown .breakdown {
+  display: flex;
+  justify-content: space-between;
+  max-width: 500px;
+}
+
+.budget-breakdown .breakdown p {
+  font-size: 1.4rem;
+}
+
+.loading-data {
+  width: 40%;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.desc-amount {
+  cursor: pointer;
+  background-color: white;
+  color: #007bff;
+  transition: background-color 0.3s ease;
+}
+
+.desc-amount:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+.desc-amount:active {
+  background-color: #004080;
 }
 </style>
