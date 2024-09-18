@@ -2,7 +2,7 @@
   <div>
     <h2>Transactions</h2>
     <div class="add-new-transaction">
-      <form @submit.prevent="addTransaction">
+      <form @submit.prevent="handleSubmit">
         <div class="select-category">
           <label>Category: </label>
           <div class="custom-select-wrapper">
@@ -14,9 +14,9 @@
           </div>
         </div>
         <input v-model="description" placeholder="Description" required />
-        <input v-model="amount" type="number" placeholder="Amount" required />
+        <input v-model="amount" type="number" step="0.01" placeholder="Amount" required />
         <input v-model="date" type="date" required />
-        <button type="submit">Add Transaction</button>
+        <button type="submit">{{ isEditing ? 'Save Transaction' : 'Add Transaction' }}</button>
       </form>
     </div>
     <h3>All Transactions</h3>
@@ -34,10 +34,16 @@
           <tr v-for="(transaction, index) in transactions" :key="index">
             <td>{{ transaction.category }}</td>
             <td>{{ transaction.description }}</td>
-            <td>${{ transaction.amount }}</td>
-            <td>{{ transaction.date }}</td>
-            <td><button @click="editTransaction(transaction.id)">Edit</button></td>
-            <td><button @click="deleteTransaction(transaction.id)">Delete</button></td>
+            <td>${{ transaction.amount.toFixed(2) }}</td>
+            <td>{{ formatDate(transaction.date) }}</td>
+            <td class="edit-delete">
+              <button @click="editButtonClicked(transaction)" class="edit-button">
+                {{ isEditing && transactionId === transaction.id ? 'Cancel' : 'Edit' }}
+              </button>
+              <button @click="deleteTransaction(transaction.id)" class="delete-button">
+                Delete
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -55,6 +61,8 @@ export default {
       description: '',
       amount: '',
       date: '',
+      transactionId: '',
+      isEditing: false,
       transactions: []
     }
   },
@@ -95,8 +103,50 @@ export default {
         console.error(error)
       }
     },
-    editTransaction(id) {
-      // Logic to edit a transaction
+    async editTransaction(id) {
+      try {
+        await axios.put(`/transactions/${id}`, {
+          category: this.selectedCategory,
+          description: this.description,
+          amount: this.amount,
+          date: this.date
+        })
+        this.fetchTransactions()
+      } catch (error) {
+        console.error(error)
+      }
+      this.description = ''
+      this.amount = ''
+      this.date = ''
+      this.isEditing = false
+      this.transactionId = ''
+    },
+    async handleSubmit() {
+      if (this.isEditing) {
+        await this.editTransaction(this.transactionId)
+      } else {
+        await this.addTransaction()
+      }
+    },
+    editButtonClicked(transaction) {
+      if (this.isEditing && this.transactionId === transaction.id) {
+        this.isEditing = false
+        this.transactionId = ''
+        this.description = ''
+        this.amount = ''
+        this.date = ''
+        return
+      }
+      this.isEditing = true
+      this.transactionId = transaction.id
+      this.description = transaction.description
+      this.amount = transaction.amount
+      this.selectedCategory = transaction.category
+      this.date = this.formatDate(transaction.date)
+    },
+    formatDate(dateString) {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-CA')
     }
   }
 }
@@ -161,6 +211,7 @@ form input {
 }
 
 form button {
+  min-width: 150px;
   padding: 10px;
   background-color: #42b983;
   color: white;
@@ -202,5 +253,33 @@ form button:hover {
 .custom-select:focus {
   outline: none;
   border-color: #5cb85c;
+}
+
+.edit-delete {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 5px;
+}
+
+.edit-button {
+  width: 70px;
+  color: green;
+  transition: 0.3s;
+}
+
+.edit-button:hover {
+  background: green;
+  color: white;
+}
+
+.delete-button {
+  width: 70px;
+  color: red;
+  transition: 0.3s;
+}
+
+.delete-button:hover {
+  background: red;
+  color: white;
 }
 </style>
