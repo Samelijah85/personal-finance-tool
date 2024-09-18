@@ -1,7 +1,20 @@
 <template>
   <div>
     <h2>Transaction Summary</h2>
-    <p>{{ summary }}</p>
+    <div class="summary">
+      <div class="detail">
+        <p>Total income</p>
+        <p>${{ summary.total_income.toFixed(2) }}</p>
+      </div>
+      <div class="detail">
+        <p>Total expenses</p>
+        <p>${{ summary.total_expenses.toFixed(2) }}</p>
+      </div>
+      <div class="detail">
+        <p>Net savings</p>
+        <p>${{ summary.net_savings.toFixed(2) }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -24,3 +37,24 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+h2 {
+  text-align: center;
+  margin: 20px;
+  max-width: 500px;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+}
+
+.detail {
+  display: flex;
+  justify-content: space-between;
+  max-width: 500px;
+}
+</style>
