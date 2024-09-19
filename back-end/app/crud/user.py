@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -7,8 +8,8 @@ from jwt.exceptions import InvalidTokenError
 
 from ..core.db import user_collection
 from ..core.config import settings
-from ..core.security import get_password_hash, verify_password
-from ..models.token import TokenData
+from ..core.security import get_password_hash, verify_password, create_access_token
+from ..models.token import Token, TokenData
 from ..models.user import User, UserInDB
 from ..schemas.user import usersEntity
 
@@ -82,3 +83,11 @@ def authenticate_user(username: str, password: str) -> UserInDB:
     if not verify_password(password, user.password):
         raise credentials_exception
     return user
+
+
+def get_access_token(username: str) -> Token:
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
