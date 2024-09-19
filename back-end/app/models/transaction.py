@@ -5,8 +5,8 @@ from pydantic import BaseModel, field_validator
 
 
 class Category(str, Enum):
-    income = "income"
-    expense = "expense"
+    income = "Income"
+    expense = "Expense"
 
 
 class Transaction(BaseModel):
