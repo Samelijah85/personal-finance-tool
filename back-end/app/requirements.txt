@@ -1,0 +1,6 @@
+python-dotenv
+pymongo
+passlib
+fastapi
+pyjwt
+pydantic
