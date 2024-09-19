@@ -23,7 +23,7 @@ def read_transactions(
     if category:
         transaction_query["category"] = category.value
 
-    transactions = transactionsEntity(transaction_collection.find(transaction_query))
+    transactions = transactionsEntity(transaction_collection.find(transaction_query).sort("date", -1))
     return transactions
 
 
