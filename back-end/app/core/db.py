@@ -1,7 +1,5 @@
 from pymongo import MongoClient
 
-from ..core.config import settings
-
 client = MongoClient('localhost', 27017)
 
 db = client.pfmt
