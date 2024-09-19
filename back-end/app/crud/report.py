@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from ..models.summary import Summary
+from ..models.transaction import Category
 from ..crud.transaction import read_transactions
 
 
@@ -12,12 +13,12 @@ def read_transaction_summary(
     total_income = sum(
         transaction.amount
         for transaction in transactions
-        if transaction.category == "income"
+        if transaction.category == Category.income
     )
     total_expenses = sum(
         transaction.amount
         for transaction in transactions
-        if transaction.category == "expense"
+        if transaction.category == Category.expense
     )
     return Summary(
         total_income=total_income,
