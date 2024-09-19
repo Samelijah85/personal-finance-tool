@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 from ..core.config import settings
 
-client = MongoClient(settings.MONGO_REMOTE_URI)
+client = MongoClient('localhost', 27017)
 
 db = client.pfmt
 
